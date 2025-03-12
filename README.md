@@ -9,7 +9,7 @@ This is like the Dark Souls of app development, probably.
 ## Development Progress Checklist:
 - create repository (check)
 - think about app idea (check)
-- download Xcode (pending) 
+- download Xcode (check)
 - look up how to program in Swift
 - learn Swift
 - make a basic application that runs
