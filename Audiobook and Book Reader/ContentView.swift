@@ -53,10 +53,25 @@ struct ContentView: View {
     func handleFileSelection(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
-            selectedFileURL = url
-            prepareAudioPlayer()
+            copyFileToAppDirectory(originalURL: url)
         case .failure(let error):
             print("File selection error: \(error.localizedDescription)")
+        }
+    }
+
+    func copyFileToAppDirectory(originalURL: URL) {
+        let fileManager = FileManager.default
+        let destinationURL = getAppSupportDirectory().appendingPathComponent(originalURL.lastPathComponent)
+
+        do {
+            if fileManager.fileExists(atPath: destinationURL.path) {
+                try fileManager.removeItem(at: destinationURL) // Remove if already exists
+            }
+            try fileManager.copyItem(at: originalURL, to: destinationURL)
+            selectedFileURL = destinationURL
+            prepareAudioPlayer()
+        } catch {
+            print("Error copying file: \(error.localizedDescription)")
         }
     }
 
@@ -81,6 +96,25 @@ struct ContentView: View {
             isPlaying = true
         }
     }
+
+    /// Returns the correct app storage directory (macOS & iOS safe)
+    func getAppSupportDirectory() -> URL {
+        let fileManager = FileManager.default
+        do {
+            let downloadsURL = try fileManager.url(for: .downloadsDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let appDirectory = downloadsURL.appendingPathComponent("AudiobookPlayer", isDirectory: true)
+
+            if !fileManager.fileExists(atPath: appDirectory.path) {
+                try fileManager.createDirectory(at: appDirectory, withIntermediateDirectories: true, attributes: nil)
+            }
+            
+            return appDirectory
+        } catch {
+            fatalError("Could not access or create Downloads subdirectory: \(error.localizedDescription)")
+        }
+    }
+
+
 }
 
 #Preview {
