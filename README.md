@@ -10,8 +10,7 @@ This is like the Dark Souls of app development, probably.
 - create repository (check)
 - think about app idea (check)
 - download Xcode (check)
-- look up how to program in Swift
-- learn Swift
+- make a basic content window (check)
 - make a basic application that runs
 - add the ability to load mp3 files
 - add ability to play mp3 files
