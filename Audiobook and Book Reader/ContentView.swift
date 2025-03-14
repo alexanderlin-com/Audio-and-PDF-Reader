@@ -53,25 +53,32 @@ struct ContentView: View {
     func handleFileSelection(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
-            copyFileToAppDirectory(originalURL: url)
+            requestAccessAndCopyFile(originalURL: url)
         case .failure(let error):
             print("File selection error: \(error.localizedDescription)")
         }
     }
 
-    func copyFileToAppDirectory(originalURL: URL) {
+    func requestAccessAndCopyFile(originalURL: URL) {
         let fileManager = FileManager.default
         let destinationURL = getAppSupportDirectory().appendingPathComponent(originalURL.lastPathComponent)
 
-        do {
-            if fileManager.fileExists(atPath: destinationURL.path) {
-                try fileManager.removeItem(at: destinationURL) // Remove if already exists
+        // Start security-scoped access
+        if originalURL.startAccessingSecurityScopedResource() {
+            defer { originalURL.stopAccessingSecurityScopedResource() } // Stop access when done
+
+            do {
+                if fileManager.fileExists(atPath: destinationURL.path) {
+                    try fileManager.removeItem(at: destinationURL) // Remove existing file
+                }
+                try fileManager.copyItem(at: originalURL, to: destinationURL)
+                selectedFileURL = destinationURL
+                prepareAudioPlayer()
+            } catch {
+                print("Error copying file: \(error.localizedDescription)")
             }
-            try fileManager.copyItem(at: originalURL, to: destinationURL)
-            selectedFileURL = destinationURL
-            prepareAudioPlayer()
-        } catch {
-            print("Error copying file: \(error.localizedDescription)")
+        } else {
+            print("Failed to get access to file at \(originalURL.path)")
         }
     }
 
@@ -101,8 +108,8 @@ struct ContentView: View {
     func getAppSupportDirectory() -> URL {
         let fileManager = FileManager.default
         do {
-            let downloadsURL = try fileManager.url(for: .downloadsDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            let appDirectory = downloadsURL.appendingPathComponent("AudiobookPlayer", isDirectory: true)
+            let cachesURL = try fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let appDirectory = cachesURL.appendingPathComponent("AudiobookPlayer", isDirectory: true)
 
             if !fileManager.fileExists(atPath: appDirectory.path) {
                 try fileManager.createDirectory(at: appDirectory, withIntermediateDirectories: true, attributes: nil)
@@ -110,11 +117,9 @@ struct ContentView: View {
             
             return appDirectory
         } catch {
-            fatalError("Could not access or create Downloads subdirectory: \(error.localizedDescription)")
+            fatalError("Could not access or create Caches subdirectory: \(error.localizedDescription)")
         }
     }
-
-
 }
 
 #Preview {
