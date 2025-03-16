@@ -11,7 +11,7 @@ This is like the Dark Souls of app development, probably.
 - think about app idea (check)
 - download Xcode (check)
 - make a basic content window (check)
-- make a basic application that runs
+- make a basic application that runs (checkish)
 - add the ability to load mp3 files
 - add ability to play mp3 files
 - add basic user interface
