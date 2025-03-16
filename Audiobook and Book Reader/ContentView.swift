@@ -14,16 +14,21 @@ struct ContentView: View {
     @State private var selectedFileURL: URL?
     @State private var showingFilePicker = false
     @State private var isPlaying = false
+    @State private var currentTime: TimeInterval = 0
+    @State private var totalDuration: TimeInterval = 0
+    @State private var timer: Timer?
 
     var body: some View {
-        VStack {
-            Text("Audiobook Player")
-                .font(.largeTitle)
-                .bold()
-                .padding()
-            
+        VStack(spacing: 20) { // Increased spacing for cleaner layout
+            // 📂 "Add Audiobook" Button (Now at the Top)
+            Button("➕ Add Audiobook") {
+                showingFilePicker = true
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.top, 20)
+
             if let fileURL = selectedFileURL {
-                Text("Selected: \(fileURL.lastPathComponent)")
+                Text("📖 \(fileURL.lastPathComponent)")
                     .font(.headline)
                     .padding()
             } else {
@@ -31,25 +36,43 @@ struct ContentView: View {
                     .foregroundStyle(.gray)
             }
 
+            // 🎵 Media Controls (Centered)
             HStack {
-                Button("Select Audiobook") {
-                    showingFilePicker = true
-                }
-                .buttonStyle(.borderedProminent)
+                Button("⏪ 15s") { rewindAudio() }
+                    .buttonStyle(.bordered)
+                    .disabled(audioPlayer == nil)
                 
-                Button(isPlaying ? "Pause" : "Play") {
-                    togglePlayback()
-                }
-                .buttonStyle(.bordered)
-                .disabled(selectedFileURL == nil)
+                Button(isPlaying ? "⏸ Pause" : "▶️ Play") { togglePlayback() }
+                    .buttonStyle(.bordered)
+                    .disabled(audioPlayer == nil)
+
+                Button("15s ⏩") { skipAudio() }
+                    .buttonStyle(.bordered)
+                    .disabled(audioPlayer == nil)
             }
-            .padding()
+
+            // 🔵 Scrub Bar (Slider to Seek Audio)
+            if audioPlayer != nil {
+                Slider(value: Binding(
+                    get: { currentTime },
+                    set: { newValue in seekToTime(newValue) }
+                ), in: 0...totalDuration)
+                .padding(.horizontal, 20)
+            }
+
+            // ⏳ Playback Timer
+            if audioPlayer != nil {
+                Text("\(formatTime(currentTime)) / \(formatTime(totalDuration))")
+                    .font(.subheadline)
+                    .padding(.bottom, 20)
+            }
         }
         .fileImporter(isPresented: $showingFilePicker, allowedContentTypes: [UTType.audio]) { result in
             handleFileSelection(result)
         }
     }
 
+    // 📂 File Selection Logic
     func handleFileSelection(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
@@ -59,17 +82,17 @@ struct ContentView: View {
         }
     }
 
+    // 🗂 File Copying & Security Access
     func requestAccessAndCopyFile(originalURL: URL) {
         let fileManager = FileManager.default
         let destinationURL = getAppSupportDirectory().appendingPathComponent(originalURL.lastPathComponent)
 
-        // Start security-scoped access
         if originalURL.startAccessingSecurityScopedResource() {
-            defer { originalURL.stopAccessingSecurityScopedResource() } // Stop access when done
+            defer { originalURL.stopAccessingSecurityScopedResource() }
 
             do {
                 if fileManager.fileExists(atPath: destinationURL.path) {
-                    try fileManager.removeItem(at: destinationURL) // Remove existing file
+                    try fileManager.removeItem(at: destinationURL)
                 }
                 try fileManager.copyItem(at: originalURL, to: destinationURL)
                 selectedFileURL = destinationURL
@@ -82,29 +105,79 @@ struct ContentView: View {
         }
     }
 
+    // 🎵 Prepare Audio Player
     func prepareAudioPlayer() {
         guard let fileURL = selectedFileURL else { return }
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
+            totalDuration = audioPlayer?.duration ?? 0
             audioPlayer?.prepareToPlay()
         } catch {
             print("Error loading audio file: \(error.localizedDescription)")
         }
     }
 
+    // ▶️ Play / Pause
     func togglePlayback() {
         guard let player = audioPlayer else { return }
         
         if player.isPlaying {
             player.pause()
             isPlaying = false
+            stopTimer()
         } else {
             player.play()
             isPlaying = true
+            startTimer()
         }
     }
 
-    /// Returns the correct app storage directory (macOS & iOS safe)
+    // 🔄 Timer for Updating Playback Time
+    func startTimer() {
+        stopTimer()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            guard let player = audioPlayer else { return }
+            currentTime = player.currentTime
+        }
+    }
+
+    func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    // ⏪ Rewind 15s
+    func rewindAudio() {
+        guard let player = audioPlayer else { return }
+        let newTime = max(player.currentTime - 15, 0)
+        player.currentTime = newTime
+        currentTime = newTime
+    }
+
+    // ⏩ Skip 15s
+    func skipAudio() {
+        guard let player = audioPlayer else { return }
+        let newTime = min(player.currentTime + 15, player.duration)
+        player.currentTime = newTime
+        currentTime = newTime
+    }
+
+    // 🎚 Seek to Specific Time via Scrub Bar
+    func seekToTime(_ time: TimeInterval) {
+        guard let player = audioPlayer else { return }
+        player.currentTime = time
+        currentTime = time
+    }
+
+    // ⏳ Convert Seconds to hh:mm:ss Format
+    func formatTime(_ time: TimeInterval) -> String {
+        let hours = Int(time) / 3600
+        let minutes = (Int(time) % 3600) / 60
+        let seconds = Int(time) % 60
+        return hours > 0 ? String(format: "%d:%02d:%02d", hours, minutes, seconds) : String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    // 📂 Get App Storage Directory
     func getAppSupportDirectory() -> URL {
         let fileManager = FileManager.default
         do {
