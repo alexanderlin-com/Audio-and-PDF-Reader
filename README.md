@@ -11,9 +11,15 @@ This is like the Dark Souls of app development, probably.
 - think about app idea (check)
 - download Xcode (check)
 - make a basic content window (check)
-- make a basic application that runs (checkish)
-- add the ability to load mp3 files
-- add ability to play mp3 files
-- add basic user interface
+- make a basic application that runs (check)
+- add the ability to load mp3 files (check)
+- add ability to play mp3 files (check)
+- add ability to read eBooks (.pdf and .epub)
+- add ability to remember where you left off when restarting the app
+- add ability to hold multiple files
+- add ability for app to pair eBooks with audiobooks so they stay together
+- add ability to organize library into folders and subfolders
+- add customization options for user
+- add UI 
 
 more steps will be added as I continue.
