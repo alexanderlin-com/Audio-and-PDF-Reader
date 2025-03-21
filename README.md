@@ -75,4 +75,4 @@ Feel free to watch the chaos unfold or fork the repo if you’re building someth
 Or just say hi. I'm always down to chat about tech, audio, or weird study hacks.
 
 ## Follow My Journey In-Depth
-[To read my full dev diary, check me out on my personal website!](https://alexanderlin.com)
+[Read my full dev diary and other musings on my personal site!](https://alexanderlin.com)
