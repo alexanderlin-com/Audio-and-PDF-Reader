@@ -1,4 +1,4 @@
-# Audio and PDF Reader
+# AudioReader
 My first iOS app ever. 
 
 This will be a fun journey. I have absolutely no idea wha I'm doing. Nor do I have any idea how to use Xcode or to code in Swift. Nor have I ever made a working app, like, ever. 
