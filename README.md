@@ -5,7 +5,7 @@ A personal learning companion that lets you **listen to audio files** (TTS notes
 
 ---
 
-## 🎯 What It Does (or Will Do Eventually™)
+## What It Does (or Will Do Eventually™)
 
 AudioReader is for people like me — students, multitaskers, chaotic learners — who use AI-generated lecture audio, downloaded audiobooks, or converted study material to review on the go. I got tired of switching between apps or digging through Canvas folders just to check a slide.
 
